@@ -57,7 +57,70 @@ Ce que permet de générer ngentest :
 ngentest ne permet pas de générer des tests plus complexes. Il faudra en créer de nouveaux pour tester plus efficacement le code. Cependant, sans plus de tests, la génération permet d’obtenir un bon coverage, avec souvent plus de 60% par composant.
 
 # Passer de Karma à Jest
+1) Installer Jest avec la commande: `npm install jest @types/jest --only=dev`
+2) Installer jest-preset-angular: `npm install jest-preset-angular`
+Puis créer un fichier **jest.config.js** contenant : 
+```
+const {
+    pathsToModuleNameMapper
+} = require('ts-jest/utils');
+const {
+    compilerOptions
+} = require('./tsconfig');
 
+module.exports = {
+    preset: 'jest-preset-angular',
+    roots: ['<rootDir>/src/'],
+    testMatch: ['**/+(*.)+(spec).+(ts)'],
+    setupFilesAfterEnv: ['<rootDir>/src/test.ts'],
+    collectCoverage: true,
+    coverageReporters: ['html'],
+    coverageDirectory: 'coverage/my-app',
+    moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths || {}, {
+        prefix: '<rootDir>/'
+    })
+};
+```
+3) Ajouter la configuration de Jest dans **package.json**
+Exemple de fichier **package.json**
+```
+{
+ "name": "my-package",
+ "version": "0.0.1",
+ "license": "MIT",
+ "scripts": {
+  "test": "jest",
+  "test:watch": "jest --watch",
+  "test:cc": "jest --coverage"
+ },
+ "dependencies": {
+  "@angular/common": "7.2.1",
+  "@angular/compiler": "7.2.1",
+  ...
+ },
+ "devDependencies": {
+  "@types/jest": "^24.0.6",
+  "jest": "^24.1.0",
+  "jest-preset-angular": "^6.0.2",
+  "ts-node": "~7.0.1",
+  "typescript": "3.2.4"
+ },
+ "jest": {
+  "preset": "jest-preset-angular",
+  "setupTestFrameworkScriptFile": "<rootDir>/setupJest.ts"
+ }
+}
+```
+4) Remplacer les **ng test** par **jest**, notamment dans **tsconfig.spec.json**, et dans **tsconfig.json**:
+```
+"compilerOptions": {
+    ...
+    "types": ["jest"]
+}
+```
+5) Enlever Jasmine et Karma: 
+`npm uninstall jasmine @types/jasmine`
+`npm remove karma karma-chrome-launcher karma-coverage-istanbul-reporter karma-jasmine karma-jasmine-html-reporter`
 
 # TestBed
 Chaque test de composant doit contenir un TestBed afin de gérer les injections de dépendances et le component binding.
@@ -361,7 +424,7 @@ it(‘…’, fakeAsync (() => {
 }))
 ```
 
-##Méthode 3: Utiliser async
+## Méthode 3: Utiliser async
 ```javascript
 it(‘…’, async (() => {
 	…
